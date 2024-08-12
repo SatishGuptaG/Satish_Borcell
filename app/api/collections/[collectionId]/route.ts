@@ -2,31 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectToDB } from "@/lib/mongoDB";
 import Collection from "@/lib/models/Collection";
+import Product from "@/lib/models/product";
 
-//import Product from "@/lib/models/Product";
+export const GET = async (
+  req: NextRequest,
+  { params }: { params: { collectionId: string } }
+) => {
+  try {
+    await connectToDB();
 
-// export const GET = async (
-//   req: NextRequest,
-//   { params }: { params: { collectionId: string } }
-// ) => {
-//   try {
-//     await connectToDB();
+    const collection = await Collection.findById(params.collectionId);
 
-    //const collection = await Collection.findById(params.collectionId).populate({ path: "products", model: Product });
+    if (!collection) {
+      return new NextResponse(
+        JSON.stringify({ message: "Collection not found" }),
+        { status: 404 }
+      );
+    }
 
-    // if (!collection) {
-    //   return new NextResponse(
-    //     JSON.stringify({ message: "Collection not found" }),
-    //     { status: 404 }
-    //   );
-    // }
-
-//     return NextResponse.json(collection, { status: 200 });
-//   } catch (err) {
-//     console.log("[collectionId_GET]", err);
-//     return new NextResponse("Internal error", { status: 500 });
-//   }
-// };
+    return NextResponse.json(collection, { status: 200 });
+    
+  } catch (err) {
+    console.log("[collectionId_GET]", err);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+};
 
 export const POST = async (
   req: NextRequest,
@@ -83,11 +83,11 @@ export const DELETE = async (
 
     await Collection.findByIdAndDelete(params.collectionId);
 
-    // await Product.updateMany(
-    //   { collections: params.collectionId },
-    //   { $pull: { collections: params.collectionId } }
-    // );
-    
+    await Product.updateMany(
+      { collections: params.collectionId },
+      { $pull: { collections: params.collectionId } }
+    );
+
     return new NextResponse("Collection is deleted", { status: 200 });
   } catch (err) {
     console.log("[collectionId_DELETE]", err);
@@ -95,4 +95,4 @@ export const DELETE = async (
   }
 };
 
-// export const dynamic = "force-dynamic";
+ export const dynamic = "force-dynamic";
